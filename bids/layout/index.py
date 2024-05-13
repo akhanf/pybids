@@ -3,8 +3,9 @@
 import os
 import json
 import re
+import fsspec
 from collections import defaultdict
-from pathlib import Path
+from upath import UPath as Path
 from functools import partial, lru_cache
 
 from bids_validator import BIDSValidator
@@ -202,8 +203,9 @@ class BIDSLayoutIndexer:
         for c in config:
             config_entities.update(c.entities)
 
+
         # Get lists of 1st-level subdirectories and files in the path directory
-        _, dirnames, filenames = next(os.walk(path))
+        _, dirnames, filenames = next(path.fs.walk(path.path))
 
         # Move any directories suffixed with .zarr to filenames
         zarrnames = [entry for entry in dirnames if Path(entry).suffix == '.zarr']
@@ -303,7 +305,7 @@ class BIDSLayoutIndexer:
         # if they correspond to data files that are indexed
         @lru_cache(maxsize=None)
         def load_json(path):
-            with open(path, 'r', encoding='utf-8') as handle:
+            with path.fs.open(path.path, 'r', encoding='utf-8') as handle:
                 try:
                     return json.load(handle)
                 except (UnicodeDecodeError, json.JSONDecodeError) as e:
@@ -324,7 +326,7 @@ class BIDSLayoutIndexer:
 
                 payload = None
                 if ext == '.json':
-                    payload = partial(load_json, bf.path)
+                    payload = partial(load_json, bf)
                 else:
                     filenames.append(bf)
 
@@ -496,3 +498,4 @@ class BIDSLayoutIndexer:
         self.session.bulk_save_objects(all_objs)
         self.session.bulk_insert_mappings(Tag, all_tag_dicts)
         self.session.commit()
+

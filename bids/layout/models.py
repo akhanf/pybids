@@ -2,7 +2,7 @@
 
 import re
 import os
-from pathlib import Path
+from upath import UPath as Path
 import warnings
 import json
 from copy import deepcopy
