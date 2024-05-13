@@ -174,7 +174,7 @@ class BIDSLayoutIndexer:
 
         # BIDS validator expects absolute paths, but really these are relative
         # to the BIDS project root.
-        to_check = f.relative_to(self._layout._root)
+        to_check = Path(f.path).relative_to(Path(self._layout._root.path)) # use .path then Path() to drop the uri prefix
         # Pretend the path is an absolute path
         to_check = Path('/') / to_check
         # bids-validator works with posix paths only
@@ -305,7 +305,7 @@ class BIDSLayoutIndexer:
         # if they correspond to data files that are indexed
         @lru_cache(maxsize=None)
         def load_json(path):
-            with path.fs.open(path.path, 'r', encoding='utf-8') as handle:
+            with Path(path).fs.open(Path(path).path, 'r', encoding='utf-8') as handle:
                 try:
                     return json.load(handle)
                 except (UnicodeDecodeError, json.JSONDecodeError) as e:
